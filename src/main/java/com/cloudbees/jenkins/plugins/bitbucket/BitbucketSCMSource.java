@@ -125,7 +125,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 /**
  * SCM source implementation for Bitbucket.
- * 
+ *
  * It provides a way to discover/retrieve branches and pull requests through the Bitbucket REST API
  * which is much faster than the plain Git SCM source implementation.
  */
@@ -540,6 +540,9 @@ public class BitbucketSCMSource extends SCMSource {
             }
             // this has the side-effect of ensuring that repository type is always populated.
             listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(getRepositoryType().name()));
+
+            request.setApi(buildBitbucketClient());
+
             // populate the request with its data sources
             if (request.isFetchPRs()) {
                 request.setPullRequests(new LazyIterable<BitbucketPullRequest>() {

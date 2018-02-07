@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -116,6 +117,8 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     private Iterable<BitbucketBranch> branches;
     // TODO private Iterable<BitbucketTag> tags;
 
+
+    private BitbucketApi api;
     /**
      * Constructor.
      *
@@ -343,6 +346,14 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         return Util.fixNull(pullRequests);
     }
 
+
+    public final void setApi(BitbucketApi api) {
+        this.api = api;
+    }
+
+    public final BitbucketApi getApi() {
+        return api;
+    }
     /**
      * Provides the requests with the branch details.
      *

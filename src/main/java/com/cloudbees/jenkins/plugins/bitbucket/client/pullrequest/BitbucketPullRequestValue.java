@@ -23,11 +23,14 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestFull;
+import com.cloudbees.jenkins.plugins.bitbucket.api.Participant;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-public class BitbucketPullRequestValue implements BitbucketPullRequest {
+import java.util.List;
+
+public class BitbucketPullRequestValue implements BitbucketPullRequestFull {
     private BitbucketPullRequestValueDestination destination;
     private BitbucketPullRequestValueRepository source;
     private String id;
@@ -36,6 +39,8 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
     private Links links;
 
     private Author author;
+
+    private List<Participant> participants;
 
     public BitbucketPullRequestValueRepository getSource() {
         return source;
@@ -91,6 +96,15 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
 
     public String getAuthorDisplayName() {
         return author.displayName;
+    }
+
+    @Override
+    public List<Participant> getParticipants() {
+        return participants;
+    }
+
+    public void setParticipants(List<Participant> participants) {
+        this.participants = participants;
     }
 
     public static class Links {

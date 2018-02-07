@@ -23,18 +23,19 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
+import com.cloudbees.jenkins.plugins.bitbucket.api.*;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-public class BitbucketServerPullRequest implements BitbucketPullRequest {
+public class BitbucketServerPullRequest implements BitbucketPullRequestFull {
 
     private String id;
 
@@ -49,6 +50,8 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
     private String link;
 
     private String authorLogin;
+
+    private List<Participant> participants;
 
     @JsonProperty
     @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
@@ -105,6 +108,15 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
         return authorLogin;
     }
 
+    @Override
+    public List<Participant> getParticipants() {
+        return participants;
+    }
+
+    public void setParticipants(List<Participant> participants) {
+        this.participants = participants;
+    }
+
     @JsonProperty
     public void setAuthor(Author author) {
         if (author != null && author.getUser() != null) {
@@ -113,7 +125,6 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
             authorLogin = null;
         }
     }
-
 
     @JsonIgnore
     public Map<String, BitbucketHref> getLinks() {
