@@ -23,17 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
+import com.cloudbees.jenkins.plugins.bitbucket.api.*;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
@@ -610,6 +600,21 @@ public class BitbucketSCMSource extends SCMSource {
                     pull.getSource().getRepository().getFullName(),
                     pull.getSource().getBranch().getName()
             );
+            if (request.isRequireApproval()) {
+                boolean hasApproval = false;
+                for (Participant participant : pull.getParticipants()){
+                    hasApproval = hasApproval || participant.getApproved();
+                }
+
+                if (!hasApproval) {
+                    request.listener().getLogger().printf(
+                            "Skipping PR-%s from %s and branch %s because it is not approved.%n",
+                            pull.getId(),
+                            pull.getSource().getRepository().getFullName(),
+                            pull.getSource().getBranch().getName());
+                    continue;
+                }
+            }
             boolean fork = !fullName.equalsIgnoreCase(pull.getSource().getRepository().getFullName());
             String pullRepoOwner = pull.getSource().getRepository().getOwnerName();
             String pullRepository = pull.getSource().getRepository().getRepositoryName();

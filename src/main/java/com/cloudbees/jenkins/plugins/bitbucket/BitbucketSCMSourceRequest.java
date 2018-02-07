@@ -69,6 +69,9 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
      * {@code true} if all pull requests from public repositories should be ignored.
      */
     private final boolean skipPublicPRs;
+
+
+    private final boolean requireApproval;
     /**
      * The {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
      */
@@ -132,6 +135,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         fetchOriginPRs = context.wantOriginPRs();
         fetchForkPRs = context.wantForkPRs();
         skipPublicPRs = context.skipPublicPRs();
+        requireApproval = context.requireApproval();
         originPRStrategies = fetchOriginPRs && !context.originPRStrategies().isEmpty()
                 ? Collections.unmodifiableSet(EnumSet.copyOf(context.originPRStrategies()))
                 : Collections.<ChangeRequestCheckoutStrategy>emptySet();
@@ -223,6 +227,8 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     public final boolean isSkipPublicPRs() {
         return skipPublicPRs;
     }
+
+    public final boolean isRequireApproval() { return requireApproval; }
 
     /**
      * Returns the {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.

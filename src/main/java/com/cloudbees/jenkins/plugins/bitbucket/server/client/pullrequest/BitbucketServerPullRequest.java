@@ -30,9 +30,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.cloudbees.jenkins.plugins.bitbucket.api.Participant;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
@@ -105,6 +108,11 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
         return authorLogin;
     }
 
+    @Override
+    public List<Participant> getParticipants() {
+        throw null;
+    }
+
     @JsonProperty
     public void setAuthor(Author author) {
         if (author != null && author.getUser() != null) {
@@ -113,7 +121,6 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
             authorLogin = null;
         }
     }
-
 
     @JsonIgnore
     public Map<String, BitbucketHref> getLinks() {
