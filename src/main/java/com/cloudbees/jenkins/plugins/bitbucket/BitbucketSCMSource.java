@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.*;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
+import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
@@ -601,18 +602,27 @@ public class BitbucketSCMSource extends SCMSource {
                     pull.getSource().getBranch().getName()
             );
             if (request.isRequireApproval()) {
+                BitbucketPullRequest pullRequestWithApproval = buildBitbucketClient().getPullRequestById(Integer.parseInt(pull.getId()));
+
+                request.listener().getLogger().println(pullRequestWithApproval);
+                System.out.println(pullRequestWithApproval);
+                System.out.println(pullRequestWithApproval.getClass());
+                System.out.println(pullRequestWithApproval.getParticipants());
                 boolean hasApproval = false;
-                for (Participant participant : pull.getParticipants()){
+                for (Participant participant : pullRequestWithApproval.getParticipants()){
                     hasApproval = hasApproval || participant.getApproved();
                 }
 
                 if (!hasApproval) {
+                    System.out.println("Skipping Pull Request: " + pull.getId() + " " + pull.getSource().getRepository().getFullName());
                     request.listener().getLogger().printf(
                             "Skipping PR-%s from %s and branch %s because it is not approved.%n",
                             pull.getId(),
                             pull.getSource().getRepository().getFullName(),
                             pull.getSource().getBranch().getName());
                     continue;
+                } else {
+                    System.out.println("Going to build Pull Request: " + pull.getId());
                 }
             }
             boolean fork = !fullName.equalsIgnoreCase(pull.getSource().getRepository().getFullName());
