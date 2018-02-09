@@ -72,6 +72,9 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
 
 
     private final boolean requireApproval;
+
+    private final boolean requireNonAuthorApproval;
+
     /**
      * The {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
      */
@@ -136,6 +139,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         fetchForkPRs = context.wantForkPRs();
         skipPublicPRs = context.skipPublicPRs();
         requireApproval = context.requireApproval();
+        requireNonAuthorApproval = context.requireNonAuthorApproval();
         originPRStrategies = fetchOriginPRs && !context.originPRStrategies().isEmpty()
                 ? Collections.unmodifiableSet(EnumSet.copyOf(context.originPRStrategies()))
                 : Collections.<ChangeRequestCheckoutStrategy>emptySet();
@@ -229,6 +233,8 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     }
 
     public final boolean isRequireApproval() { return requireApproval; }
+
+    public final boolean isRequireNonAuthorApproval() { return requireNonAuthorApproval; }
 
     /**
      * Returns the {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.

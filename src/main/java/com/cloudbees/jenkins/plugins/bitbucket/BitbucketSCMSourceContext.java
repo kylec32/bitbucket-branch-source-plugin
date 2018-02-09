@@ -63,6 +63,9 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     private boolean skipPublicPRs;
 
     private boolean requireApproval;
+
+    private boolean requireNonAuthorApproval;
+
     /**
      * Set of {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
      */
@@ -154,6 +157,8 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
     }
 
     public final boolean requireApproval() { return  requireApproval; }
+
+    public final boolean requireNonAuthorApproval() { return requireNonAuthorApproval; }
 
     /**
      * Returns the set of {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
@@ -269,6 +274,11 @@ public class BitbucketSCMSourceContext extends SCMSourceContext<BitbucketSCMSour
 
     public final BitbucketSCMSourceContext requireApproval(boolean requireApproval) {
         this.requireApproval = requireApproval;
+        return this;
+    }
+
+    public final BitbucketSCMSourceContext requireNonAuthorApproval(boolean requireNonAuthorApproval) {
+        this.requireNonAuthorApproval = requireNonAuthorApproval;
         return this;
     }
 
