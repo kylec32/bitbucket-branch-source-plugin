@@ -53,6 +53,8 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
     private String authorLogin;
 
+    private List<Participant> participants;
+
     @JsonProperty
     @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
     private Map<String, List<BitbucketHref>> links;
@@ -110,7 +112,11 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
     @Override
     public List<Participant> getParticipants() {
-        throw null;
+        return participants;
+    }
+
+    public void setParticipants(List<Participant> participants) {
+        this.participants = participants;
     }
 
     @JsonProperty

@@ -605,9 +605,6 @@ public class BitbucketSCMSource extends SCMSource {
                 BitbucketPullRequest pullRequestWithApproval = buildBitbucketClient().getPullRequestById(Integer.parseInt(pull.getId()));
 
                 request.listener().getLogger().println(pullRequestWithApproval);
-                System.out.println(pullRequestWithApproval);
-                System.out.println(pullRequestWithApproval.getClass());
-                System.out.println(pullRequestWithApproval.getParticipants());
                 boolean hasApproval = false;
                 for (Participant participant : pullRequestWithApproval.getParticipants()){
                     hasApproval = hasApproval || participant.getApproved();
