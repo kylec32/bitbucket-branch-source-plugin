@@ -25,17 +25,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client;
 
 import com.cloudbees.jenkins.plugins.bitbucket.JsonParser;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
+import com.cloudbees.jenkins.plugins.bitbucket.api.*;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.client.branch.BitbucketCloudCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestCommit;
@@ -275,7 +265,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @Override
     @NonNull
-    public BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException, InterruptedException {
+    public BitbucketPullRequestFull getPullRequestById(@NonNull Integer id) throws IOException, InterruptedException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/pullrequests{/id}")
                 .set("owner", owner)
                 .set("repo", repositoryName)

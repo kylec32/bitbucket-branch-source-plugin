@@ -23,14 +23,14 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestFull;
 import com.cloudbees.jenkins.plugins.bitbucket.api.Participant;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import java.util.List;
 
-public class BitbucketPullRequestValue implements BitbucketPullRequest {
+public class BitbucketPullRequestValue implements BitbucketPullRequestFull {
     private BitbucketPullRequestValueDestination destination;
     private BitbucketPullRequestValueRepository source;
     private String id;

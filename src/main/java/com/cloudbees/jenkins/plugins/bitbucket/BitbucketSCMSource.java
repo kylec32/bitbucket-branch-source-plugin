@@ -23,9 +23,18 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket;
 
-import com.cloudbees.jenkins.plugins.bitbucket.api.*;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApiFactory;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.client.BitbucketCloudApiClient;
-import com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest.BitbucketPullRequestValue;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
@@ -116,7 +125,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 /**
  * SCM source implementation for Bitbucket.
- * 
+ *
  * It provides a way to discover/retrieve branches and pull requests through the Bitbucket REST API
  * which is much faster than the plain Git SCM source implementation.
  */
@@ -531,6 +540,9 @@ public class BitbucketSCMSource extends SCMSource {
             }
             // this has the side-effect of ensuring that repository type is always populated.
             listener.getLogger().format("Repository type: %s%n", WordUtils.capitalizeFully(getRepositoryType().name()));
+
+            request.setApi(buildBitbucketClient());
+
             // populate the request with its data sources
             if (request.isFetchPRs()) {
                 request.setPullRequests(new LazyIterable<BitbucketPullRequest>() {
@@ -601,30 +613,6 @@ public class BitbucketSCMSource extends SCMSource {
                     pull.getSource().getRepository().getFullName(),
                     pull.getSource().getBranch().getName()
             );
-            if (request.isRequireApproval()) {
-                BitbucketPullRequest pullRequestWithApproval = buildBitbucketClient().getPullRequestById(Integer.parseInt(pull.getId()));
-
-                request.listener().getLogger().println(pullRequestWithApproval);
-                boolean hasApproval = false;
-                for (Participant participant : pullRequestWithApproval.getParticipants()){
-                    if (! (participant.getUser().getUsername().equalsIgnoreCase(pull.getAuthorLogin())
-                            && request.isRequireNonAuthorApproval())) {
-                        hasApproval = hasApproval || participant.getApproved();
-                    }
-                }
-
-                if (!hasApproval) {
-                    System.out.println("Skipping Pull Request: " + pull.getId() + " " + pull.getSource().getRepository().getFullName());
-                    request.listener().getLogger().printf(
-                            "Skipping PR-%s from %s and branch %s because it is not approved.%n",
-                            pull.getId(),
-                            pull.getSource().getRepository().getFullName(),
-                            pull.getSource().getBranch().getName());
-                    continue;
-                } else {
-                    System.out.println("Going to build Pull Request: " + pull.getId());
-                }
-            }
             boolean fork = !fullName.equalsIgnoreCase(pull.getSource().getRepository().getFullName());
             String pullRepoOwner = pull.getSource().getRepository().getOwnerName();
             String pullRepository = pull.getSource().getRepository().getRepositoryName();
