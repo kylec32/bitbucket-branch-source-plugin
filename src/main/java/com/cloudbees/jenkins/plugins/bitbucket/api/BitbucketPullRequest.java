@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-import java.util.List;
 
 /**
  * Represents a pull request in Bitbucket.
