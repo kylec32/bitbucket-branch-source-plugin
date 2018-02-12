@@ -24,7 +24,6 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestFull;
-import com.cloudbees.jenkins.plugins.bitbucket.api.Participant;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -40,7 +39,9 @@ public class BitbucketPullRequestValue implements BitbucketPullRequestFull {
 
     private Author author;
 
-    private List<Participant> participants;
+    //Bitbucket cloud seems to have all the same information in the participant field plus more.
+    @JsonProperty("participants")
+    private List<BitbucketReviewerValue> reviewers;
 
     public BitbucketPullRequestValueRepository getSource() {
         return source;
@@ -99,12 +100,12 @@ public class BitbucketPullRequestValue implements BitbucketPullRequestFull {
     }
 
     @Override
-    public List<Participant> getParticipants() {
-        return participants;
+    public List<BitbucketReviewerValue> getReviewers() {
+        return reviewers;
     }
 
-    public void setParticipants(List<Participant> participants) {
-        this.participants = participants;
+    public void setReviewers(List<BitbucketReviewerValue> reviewers) {
+        this.reviewers = reviewers;
     }
 
     public static class Links {

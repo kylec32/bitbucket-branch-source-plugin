@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-
 /**
  * Represents a pull request in Bitbucket.
  * Only the source repository is necessary, the destination repo is inferred.

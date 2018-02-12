@@ -32,7 +32,6 @@ import java.util.Map;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestFull;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
-import com.cloudbees.jenkins.plugins.bitbucket.api.Participant;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
@@ -53,7 +52,7 @@ public class BitbucketServerPullRequest implements BitbucketPullRequestFull {
 
     private String authorLogin;
 
-    private List<Participant> participants;
+    private List<BitbucketServerReviewer> reviewers;
 
     @JsonProperty
     @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
@@ -111,12 +110,12 @@ public class BitbucketServerPullRequest implements BitbucketPullRequestFull {
     }
 
     @Override
-    public List<Participant> getParticipants() {
-        return participants;
+    public List<BitbucketServerReviewer> getReviewers() {
+        return reviewers;
     }
 
-    public void setParticipants(List<Participant> participants) {
-        this.participants = participants;
+    public void setReviewers(List<BitbucketServerReviewer> reviewers) {
+        this.reviewers = reviewers;
     }
 
     @JsonProperty

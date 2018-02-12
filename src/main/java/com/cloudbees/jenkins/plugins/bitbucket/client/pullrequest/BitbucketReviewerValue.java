@@ -1,10 +1,12 @@
-package com.cloudbees.jenkins.plugins.bitbucket.api;
+package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketReviewer;
 
-public class Participant {
+public class BitbucketReviewerValue implements BitbucketReviewer {
     private User user;
     private boolean approved;
 
+    @Override
     public boolean getApproved() {
         return approved;
     }
@@ -16,6 +18,11 @@ public class Participant {
     public User getUser() { return user; }
 
     public void setUser(User user) { this.user = user; }
+
+    @Override
+    public String getReviewerLogin() {
+        return user.getUsername();
+    }
 
     public static class User {
         private String username;
