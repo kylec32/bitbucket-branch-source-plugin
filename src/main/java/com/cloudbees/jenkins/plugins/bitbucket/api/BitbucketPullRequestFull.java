@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface BitbucketPullRequestFull extends BitbucketPullRequest {
 
-    List<Participant> getParticipants();
+    List<? extends BitbucketReviewer> getReviewers();
 }
