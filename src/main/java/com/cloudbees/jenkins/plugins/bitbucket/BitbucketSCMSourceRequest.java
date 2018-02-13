@@ -116,8 +116,9 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     @CheckForNull
     private Iterable<BitbucketBranch> branches;
     // TODO private Iterable<BitbucketTag> tags;
-
-
+    /**
+     * The BitbucketApi that is used for the request.
+     */
     private BitbucketApi api;
     /**
      * Constructor.
@@ -346,11 +347,18 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         return Util.fixNull(pullRequests);
     }
 
-
+    /**
+     * Provides the BitbucketApi object for use in the request.
+     * @param api the API object.
+     */
     public final void setApi(BitbucketApi api) {
         this.api = api;
     }
 
+    /**
+     * Returns the BitbucketApi object for the request.
+     * @return the BitbucketApi object.
+     */
     public final BitbucketApi getApi() {
         return api;
     }

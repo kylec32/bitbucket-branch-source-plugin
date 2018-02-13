@@ -25,7 +25,13 @@ package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import java.util.List;
 
+/**
+ * Represents all the details of a pull request.
+ */
 public interface BitbucketPullRequestFull extends BitbucketPullRequest {
 
+    /**
+     * @return Reviewers for the pull request
+     */
     List<? extends BitbucketReviewer> getReviewers();
 }
