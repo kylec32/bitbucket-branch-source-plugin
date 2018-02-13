@@ -23,10 +23,18 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-
+/**
+ * Represents the reviewer of a pull request.
+ */
 public interface BitbucketReviewer {
 
+    /**
+     * @return whether the reviewer has approved the pull request.
+     */
     boolean getApproved();
 
+    /**
+     * @return the username of the reviewer.
+     */
     String getReviewerLogin();
 }
