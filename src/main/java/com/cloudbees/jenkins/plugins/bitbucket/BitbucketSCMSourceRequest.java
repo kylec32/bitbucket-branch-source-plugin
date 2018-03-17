@@ -357,10 +357,11 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     /**
      * Retrieves the full details of a pull request.
      * @param id The id of the pull request to retrieve the details about.
-     * @return The full pull request details.
+     * @return The {@link BitbucketPullRequestFull} object.
      * @throws IOException If the request to retrieve the full details encounters an issue.
      * @throws InterruptedException If the request to retrieve the full details is interrupted.
      */
+    @SuppressWarnings("unused") // Used by extension trait plugin
     public final BitbucketPullRequestFull getPullRequestById(Integer id) throws IOException, InterruptedException {
         if (!fullPullRequestData.containsKey(id)) {
             fullPullRequestData.put(id, api.getPullRequestById(id));
