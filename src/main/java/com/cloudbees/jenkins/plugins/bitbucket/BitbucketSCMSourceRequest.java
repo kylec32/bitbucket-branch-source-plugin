@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestFull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
@@ -119,7 +120,11 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     /**
      * The BitbucketApi that is used for the request.
      */
-    private BitbucketApi api;
+    private final BitbucketApi api;
+    /**
+     * A map serving as a cache of pull request IDs to the full set of data about the pull request.
+     */
+    private final Map<Integer, BitbucketPullRequestFull> fullPullRequestData;
     /**
      * Constructor.
      *
@@ -172,6 +177,8 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         }
         repoOwner = source.getRepoOwner();
         repository = source.getRepository();
+        fullPullRequestData = new HashMap<>();
+        api = source.buildBitbucketClient();
     }
 
     /**
@@ -348,20 +355,20 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Provides the BitbucketApi object for use in the request.
-     * @param api the API object.
+     * Retrieves the full details of a pull request.
+     * @param id The id of the pull request to retrieve the details about.
+     * @return The full pull request details.
+     * @throws IOException If the request to retrieve the full details encounters an issue.
+     * @throws InterruptedException If the request to retrieve the full details is interrupted.
      */
-    public final void setApi(BitbucketApi api) {
-        this.api = api;
+    public final BitbucketPullRequestFull getPullRequestById(Integer id) throws IOException, InterruptedException {
+        if (!fullPullRequestData.containsKey(id)) {
+            fullPullRequestData.put(id, api.getPullRequestById(id));
+        }
+
+        return fullPullRequestData.get(id);
     }
 
-    /**
-     * Returns the BitbucketApi object for the request.
-     * @return the BitbucketApi object.
-     */
-    public final BitbucketApi getApi() {
-        return api;
-    }
     /**
      * Provides the requests with the branch details.
      *
