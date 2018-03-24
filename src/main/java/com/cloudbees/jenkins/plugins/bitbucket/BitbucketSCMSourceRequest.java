@@ -120,7 +120,11 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     /**
      * The BitbucketApi that is used for the request.
      */
-    private final BitbucketApi api;
+    private BitbucketApi api;
+    /**
+     * The BitbucketSCMSource that is used for the request.
+     */
+    private final BitbucketSCMSource source;
     /**
      * A map serving as a cache of pull request IDs to the full set of data about the pull request.
      */
@@ -136,6 +140,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
                                         @NonNull BitbucketSCMSourceContext context,
                                         @CheckForNull TaskListener listener) {
         super(source, context, listener);
+        this.source = source;
         fetchBranches = context.wantBranches();
         fetchTags = context.wantTags();
         fetchOriginPRs = context.wantOriginPRs();
@@ -178,7 +183,6 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         repoOwner = source.getRepoOwner();
         repository = source.getRepository();
         fullPullRequestData = new HashMap<>();
-        api = source.buildBitbucketClient();
     }
 
     /**
@@ -364,10 +368,18 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     @SuppressWarnings("unused") // Used by extension trait plugin
     public final BitbucketPullRequestFull getPullRequestById(Integer id) throws IOException, InterruptedException {
         if (!fullPullRequestData.containsKey(id)) {
-            fullPullRequestData.put(id, api.getPullRequestById(id));
+            fullPullRequestData.put(id, getBitbucketApiClient().getPullRequestById(id));
         }
 
         return fullPullRequestData.get(id);
+    }
+
+    private final BitbucketApi getBitbucketApiClient() {
+        if (api == null) {
+            api = source.buildBitbucketClient();
+        }
+
+        return api;
     }
 
     /**
