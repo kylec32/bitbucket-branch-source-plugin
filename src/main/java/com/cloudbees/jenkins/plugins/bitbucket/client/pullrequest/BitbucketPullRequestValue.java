@@ -23,9 +23,10 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestFull;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 import java.util.List;
 
@@ -81,6 +82,12 @@ public class BitbucketPullRequestValue implements BitbucketPullRequestFull {
     @Override
     public String getAuthorLogin() {
         return author.username;
+    }
+
+    @Override
+    public String getAuthorEmail() {
+        // return null because BitBucket Cloud hides users emails
+        return null;
     }
 
     public void setTitle(String title) {

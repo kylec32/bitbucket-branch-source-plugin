@@ -24,6 +24,13 @@
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest;
 
 
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +60,10 @@ public class BitbucketServerPullRequest implements BitbucketPullRequestFull {
     private String authorLogin;
 
     private List<BitbucketServerReviewer> reviewers;
+
+    private String authorEmail;
+
+    private Boolean canMerge;
 
     @JsonProperty
     @JsonDeserialize(keyAs = String.class, contentUsing = BitbucketHref.Deserializer.class)
@@ -118,13 +129,28 @@ public class BitbucketServerPullRequest implements BitbucketPullRequestFull {
         this.reviewers = reviewers;
     }
 
+    public String getAuthorEmail() {
+        return authorEmail;
+    }
+
     @JsonProperty
     public void setAuthor(Author author) {
         if (author != null && author.getUser() != null) {
             authorLogin = author.getUser().getDisplayName();
+            authorEmail = author.getUser().getEmailAddress();
         } else {
             authorLogin = null;
+            authorEmail = null;
         }
+    }
+
+    @CheckForNull
+    public Boolean isCanMerge() {
+        return canMerge;
+    }
+
+    public void setCanMerge(Boolean canMerge) {
+        this.canMerge = canMerge;
     }
 
     @JsonIgnore

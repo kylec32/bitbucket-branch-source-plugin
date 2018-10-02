@@ -640,7 +640,7 @@ public class BitbucketSCMSource extends SCMSource {
                     .put(pull.getId(), StringUtils.defaultString(pull.getTitle()));
             getPullRequestContributorCache().put(pull.getId(),
                     // TODO get more details on the author
-                    new ContributorMetadataAction(pull.getAuthorLogin(), null, null)
+                    new ContributorMetadataAction(pull.getAuthorLogin(), null, pull.getAuthorEmail())
             );
             try {
                 // We store resolved hashes here so to avoid resolving the commits multiple times
@@ -667,7 +667,7 @@ public class BitbucketSCMSource extends SCMSource {
                                 repoOwner,
                                 repository,
                                 repositoryType,
-                                branchName,
+                                pull.getSource().getBranch().getName(),
                                 pull,
                                 originOf(pullRepoOwner, pullRepository),
                                 strategy

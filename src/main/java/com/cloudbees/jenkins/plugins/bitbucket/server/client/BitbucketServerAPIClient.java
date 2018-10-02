@@ -36,11 +36,15 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRequestException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketTeam;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.UserRoleInRepository;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.AbstractBitbucketEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketEndpointConfiguration;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.filesystem.BitbucketSCMFile;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranches;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequestCanMerge;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest.BitbucketServerPullRequests;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerProject;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepositories;
@@ -49,6 +53,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.Bitbucke
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.impl.Operator;
+import com.fasterxml.jackson.core.type.TypeReference;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ProxyConfiguration;
@@ -103,7 +108,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.type.TypeReference;
 
 /**
  * Bitbucket API client.
@@ -120,6 +124,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private static final String API_TAGS_PATH = API_REPOSITORY_PATH + "/tags{?start,limit}";
     private static final String API_PULL_REQUESTS_PATH = API_REPOSITORY_PATH + "/pull-requests{?start,limit}";
     private static final String API_PULL_REQUEST_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}";
+    private static final String API_PULL_REQUEST_MERGE_PATH = API_REPOSITORY_PATH + "/pull-requests/{id}/merge";
     private static final String API_BROWSE_PATH = API_REPOSITORY_PATH + "/browse{/path*}{?at}";
     private static final String API_COMMITS_PATH = API_REPOSITORY_PATH + "/commits{/hash}";
     private static final String API_PROJECT_PATH = API_BASE_PATH + "/projects/{owner}";
@@ -290,12 +295,37 @@ public class BitbucketServerAPIClient implements BitbucketApi {
                 page = JsonParser.toJava(response, BitbucketServerPullRequests.class);
                 pullRequests.addAll(page.getValues());
             }
+
+            AbstractBitbucketEndpoint endpointConfig = BitbucketEndpointConfiguration.get().findEndpoint(baseURL);
+            if (endpointConfig instanceof BitbucketServerEndpoint && ((BitbucketServerEndpoint)endpointConfig).isCallCanMerge()) {
+                // This is required for Bitbucket Server to update the refs/pull-requests/* references
+                // See https://community.atlassian.com/t5/Bitbucket-questions/Change-pull-request-refs-after-Commit-instead-of-after-Approval/qaq-p/194702#M6829
+                for (BitbucketServerPullRequest pullRequest : pullRequests) {
+                    pullRequest.setCanMerge(getPullRequestCanMergeById(Integer.parseInt(pullRequest.getId())));
+                }
+            }
+            
             return pullRequests;
         } catch (IOException e) {
             throw new IOException("I/O error when accessing URL: " + url, e);
         }
     }
 
+    private boolean getPullRequestCanMergeById(@NonNull Integer id) throws IOException {
+        String url = UriTemplate
+                .fromTemplate(API_PULL_REQUEST_MERGE_PATH)
+                .set("owner", getUserCentricOwner())
+                .set("repo", repositoryName)
+                .set("id", id)
+                .expand();
+        String response = getRequest(url);
+        try {
+            return JsonParser.toJava(response, BitbucketServerPullRequestCanMerge.class).isCanMerge();
+        } catch (IOException e) {
+            throw new IOException("I/O error when accessing URL: " + url, e);
+        }
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -622,7 +652,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private String getRequest(String path) throws IOException {
         HttpGet httpget = new HttpGet(this.baseURL + path);
 
-        try(CloseableHttpClient client = getHttpClient(getMethodHost(httpget));
+        try(CloseableHttpClient client = getHttpClient(httpget);
                 CloseableHttpResponse response = client.execute(httpget, context)) {
             String content;
             long len = response.getEntity().getContentLength();
@@ -661,11 +691,19 @@ public class BitbucketServerAPIClient implements BitbucketApi {
 
     /**
      * Create HttpClient from given host/port
-     * @param host must be of format: scheme://host:port. e.g. http://localhost:7990
+     * @param request the {@link HttpRequestBase} for which an HttpClient will be created
      * @return CloseableHttpClient
      */
-    private CloseableHttpClient getHttpClient(String host) {
+    private CloseableHttpClient getHttpClient(final HttpRequestBase request) {
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+
+        RequestConfig.Builder requestConfig = RequestConfig.custom();
+        requestConfig.setConnectTimeout(10 * 1000);
+        requestConfig.setConnectionRequestTimeout(60 * 1000);
+        requestConfig.setSocketTimeout(60 * 1000);
+        request.setConfig(requestConfig.build());
+
+        final String host = getMethodHost(request);
 
         if (credentials != null) {
             CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -720,7 +758,7 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     private int getRequestStatus(String path) throws IOException {
         HttpGet httpget = new HttpGet(this.baseURL + path);
 
-        try(CloseableHttpClient client = getHttpClient(getMethodHost(httpget));
+        try(CloseableHttpClient client = getHttpClient(httpget);
                 CloseableHttpResponse response = client.execute(httpget, context)) {
             EntityUtils.consume(response.getEntity());
             return response.getStatusLine().getStatusCode();
@@ -760,13 +798,8 @@ public class BitbucketServerAPIClient implements BitbucketApi {
     }
 
     private String doRequest(HttpRequestBase request) throws IOException {
-        RequestConfig.Builder requestConfig = RequestConfig.custom();
-        requestConfig.setConnectTimeout(10 * 1000);
-        requestConfig.setConnectionRequestTimeout(60 * 1000);
-        requestConfig.setSocketTimeout(60 * 1000);
-        request.setConfig(requestConfig.build());
 
-        try(CloseableHttpClient client = getHttpClient(getMethodHost(request));
+        try(CloseableHttpClient client = getHttpClient(request);
                 CloseableHttpResponse response = client.execute(request, context)) {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NO_CONTENT) {
                 EntityUtils.consume(response.getEntity());
