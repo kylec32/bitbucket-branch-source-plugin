@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.plugins.bitbucket;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketApi;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestFull;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
@@ -128,7 +127,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     /**
      * A map serving as a cache of pull request IDs to the full set of data about the pull request.
      */
-    private final Map<Integer, BitbucketPullRequestFull> fullPullRequestData;
+    private final Map<Integer, BitbucketPullRequest> pullRequestData;
     /**
      * The tag details or {@code null} if not {@link #isFetchTags()}.
      */
@@ -188,7 +187,7 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
         }
         repoOwner = source.getRepoOwner();
         repository = source.getRepository();
-        fullPullRequestData = new HashMap<>();
+        pullRequestData = new HashMap<>();
     }
 
     /**
@@ -367,17 +366,17 @@ public class BitbucketSCMSourceRequest extends SCMSourceRequest {
     /**
      * Retrieves the full details of a pull request.
      * @param id The id of the pull request to retrieve the details about.
-     * @return The {@link BitbucketPullRequestFull} object.
+     * @return The {@link BitbucketPullRequest} object.
      * @throws IOException If the request to retrieve the full details encounters an issue.
      * @throws InterruptedException If the request to retrieve the full details is interrupted.
      */
     @SuppressWarnings("unused") // Used by extension trait plugin
-    public final BitbucketPullRequestFull getPullRequestById(Integer id) throws IOException, InterruptedException {
-        if (!fullPullRequestData.containsKey(id)) {
-            fullPullRequestData.put(id, getBitbucketApiClient().getPullRequestById(id));
+    public final BitbucketPullRequest getPullRequestById(Integer id) throws IOException, InterruptedException {
+        if (!pullRequestData.containsKey(id)) {
+            pullRequestData.put(id, getBitbucketApiClient().getPullRequestById(id));
         }
 
-        return fullPullRequestData.get(id);
+        return pullRequestData.get(id);
     }
 
     private final BitbucketApi getBitbucketApiClient() {

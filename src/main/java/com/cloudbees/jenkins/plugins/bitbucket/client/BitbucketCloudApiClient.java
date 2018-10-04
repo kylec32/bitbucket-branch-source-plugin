@@ -30,7 +30,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBuildStatus;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketException;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestFull;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryProtocol;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepositoryType;
@@ -297,7 +296,7 @@ public class BitbucketCloudApiClient implements BitbucketApi {
      */
     @Override
     @NonNull
-    public BitbucketPullRequestFull getPullRequestById(@NonNull Integer id) throws IOException, InterruptedException {
+    public BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException, InterruptedException {
         String url = UriTemplate.fromTemplate(REPO_URL_TEMPLATE + "/pullrequests{/id}")
                 .set("owner", owner)
                 .set("repo", repositoryName)

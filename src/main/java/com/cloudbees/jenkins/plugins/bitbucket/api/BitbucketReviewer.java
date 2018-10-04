@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016-2017, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,18 +23,44 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
-/**
- * Represents the reviewer of a pull request.
- */
-public interface BitbucketReviewer {
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    /**
-     * @return whether the reviewer has approved the pull request.
-     */
-    boolean getApproved();
+public class BitbucketReviewer {
+    private User user;
+    private boolean approved;
 
-    /**
-     * @return the username of the reviewer.
-     */
-    String getReviewerLogin();
+    public boolean getApproved() {
+        return approved;
+    }
+
+    public void setApproved(boolean approved) {
+        this.approved = approved;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public static class User {
+        private String username;
+        private String name;
+
+        @JsonProperty("username")
+        public void setCloudUsername(String username) {
+            this.username = username;
+        }
+
+        @JsonProperty("name")
+        public void setServerUsername(String name) {
+            this.name = name;
+        }
+
+        public String getLoginName() {
+            return username == null ? name : username;
+        }
+    }
 }

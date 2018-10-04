@@ -88,7 +88,7 @@ public interface BitbucketApi {
      * @throws InterruptedException if interrupted while waiting on remote communications.
      */
     @NonNull
-    BitbucketPullRequestFull getPullRequestById(@NonNull Integer id) throws IOException, InterruptedException;
+    BitbucketPullRequest getPullRequestById(@NonNull Integer id) throws IOException, InterruptedException;
 
     /**
      * Returns the repository details.

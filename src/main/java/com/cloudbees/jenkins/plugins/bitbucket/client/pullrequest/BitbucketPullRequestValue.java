@@ -24,13 +24,14 @@
 package com.cloudbees.jenkins.plugins.bitbucket.client.pullrequest;
 
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketReviewer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestFull;
 
 import java.util.List;
 
-public class BitbucketPullRequestValue implements BitbucketPullRequestFull {
+public class BitbucketPullRequestValue implements BitbucketPullRequest {
     private BitbucketPullRequestValueDestination destination;
     private BitbucketPullRequestValueRepository source;
     private String id;
@@ -42,7 +43,7 @@ public class BitbucketPullRequestValue implements BitbucketPullRequestFull {
 
     //Bitbucket cloud seems to have all the same information in the participant field plus more.
     @JsonProperty("participants")
-    private List<BitbucketReviewerValue> reviewers;
+    private List<BitbucketReviewer> reviewers;
 
     public BitbucketPullRequestValueRepository getSource() {
         return source;
@@ -107,11 +108,12 @@ public class BitbucketPullRequestValue implements BitbucketPullRequestFull {
     }
 
     @Override
-    public List<BitbucketReviewerValue> getReviewers() {
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public List<BitbucketReviewer> getReviewers() {
         return reviewers;
     }
 
-    public void setReviewers(List<BitbucketReviewerValue> reviewers) {
+    public void setReviewers(List<BitbucketReviewer> reviewers) {
         this.reviewers = reviewers;
     }
 
