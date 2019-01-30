@@ -59,7 +59,7 @@ public enum HookEventType {
     /**
      * See <a href="https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Approved">EventPayloads-Approved</a>
      */
-    PULL_REQUEST_APPROVED("pullrequest:approved", PullRequestHookProcessor.class);
+    PULL_REQUEST_APPROVED("pullrequest:approved", PullRequestHookProcessor.class),
 
     /**
      * @see <a href="https://confluence.atlassian.com/bitbucketserver054/event-payload-939508609.html#Eventpayload-Push">Eventpayload-Push</a>
