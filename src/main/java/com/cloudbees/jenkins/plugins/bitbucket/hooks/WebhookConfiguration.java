@@ -27,7 +27,10 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketWebHook;
 import com.cloudbees.jenkins.plugins.bitbucket.client.repository.BitbucketRepositoryHook;
 import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketCloudEndpoint;
+import com.cloudbees.jenkins.plugins.bitbucket.endpoints.BitbucketServerEndpoint;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerWebhook;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.NativeBitbucketServerWebhook;
+import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,16 +38,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import jenkins.model.Jenkins;
 
 /**
  * Contains the webhook configuration
  */
- 
 public class WebhookConfiguration {
 
     /**
-     * The list of events available in Bitbucket Cloud
+     * The list of events available in Bitbucket Cloud.
      */
     private static final List<String> CLOUD_EVENTS = Collections.unmodifiableList(Arrays.asList(
             HookEventType.PUSH.getKey(),
@@ -53,73 +54,140 @@ public class WebhookConfiguration {
             HookEventType.PULL_REQUEST_MERGED.getKey(),
             HookEventType.PULL_REQUEST_DECLINED.getKey()
     ));
-    
+
     /**
-     * The title of the webhook
+     * The list of events available in Bitbucket Server.
+     */
+    private static final List<String> NATIVE_SERVER_EVENTS = Collections.unmodifiableList(Arrays.asList(
+            HookEventType.SERVER_REFS_CHANGED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_OPENED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_MERGED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_DECLINED.getKey(),
+            HookEventType.SERVER_PULL_REQUEST_DELETED.getKey()
+    ));
+
+    /**
+     * The title of the webhook.
      */
     private static final String description = "Jenkins hook";
-    
+
     /**
-     * The comma separated list of committers to ignore
+     * The comma separated list of committers to ignore.
      */
-    private String committersToIgnore;
-    
+    private final String committersToIgnore;
+
     public WebhookConfiguration() {
         this.committersToIgnore = null;
     }
-    
+
     public WebhookConfiguration(@CheckForNull final String committersToIgnore) {
         this.committersToIgnore = committersToIgnore;
     }
 
-    public boolean hasChanges(BitbucketWebHook hook) {
-        if(hook instanceof BitbucketRepositoryHook) {
-            return !((BitbucketRepositoryHook) hook).getEvents().containsAll(CLOUD_EVENTS);
+    boolean updateHook(BitbucketWebHook hook, BitbucketSCMSource owner) {
+        if (hook instanceof BitbucketRepositoryHook) {
+            if (!hook.getEvents().containsAll(CLOUD_EVENTS)) {
+                Set<String> events = new TreeSet<>(hook.getEvents());
+                events.addAll(CLOUD_EVENTS);
+                BitbucketRepositoryHook repoHook = (BitbucketRepositoryHook) hook;
+                repoHook.setEvents(new ArrayList<>(events));
+                return true;
+            }
+
+            return false;
         }
-        
-        // Handle null case
-        String hookCommittersToIgnore = ((BitbucketServerWebhook) hook).getCommittersToIgnore();
-        if(hookCommittersToIgnore == null) {
-            hookCommittersToIgnore = "";
+
+        if (hook instanceof BitbucketServerWebhook) {
+            BitbucketServerWebhook serverHook = (BitbucketServerWebhook) hook;
+
+            // Handle null case
+            String hookCommittersToIgnore = ((BitbucketServerWebhook) hook).getCommittersToIgnore();
+            if (hookCommittersToIgnore == null) {
+                hookCommittersToIgnore = "";
+            }
+
+            // Handle null case
+            String thisCommittersToIgnore = committersToIgnore;
+            if (thisCommittersToIgnore == null) {
+                thisCommittersToIgnore = "";
+            }
+
+            if (!hookCommittersToIgnore.trim().equals(thisCommittersToIgnore.trim())) {
+                serverHook.setCommittersToIgnore(committersToIgnore);
+                return true;
+            }
+
+            return false;
         }
-        
-        // Handle null case
-        String thisCommittersToIgnore = committersToIgnore;
-        if(thisCommittersToIgnore == null) {
-            thisCommittersToIgnore = "";
+
+        if (hook instanceof NativeBitbucketServerWebhook) {
+            boolean updated = false;
+
+            NativeBitbucketServerWebhook serverHook = (NativeBitbucketServerWebhook) hook;
+            String url = getNativeServerWebhookUrl(owner.getServerUrl(), owner.getEndpointJenkinsRootUrl());
+
+            if (!url.equals(serverHook.getUrl())) {
+                serverHook.setUrl(url);
+                updated = true;
+            }
+
+            List<String> events = serverHook.getEvents();
+            if (events == null) {
+                serverHook.setEvents(NATIVE_SERVER_EVENTS);
+                updated = true;
+            } else if (!events.containsAll(NATIVE_SERVER_EVENTS)) {
+                Set<String> newEvents = new TreeSet<>(events);
+                newEvents.addAll(NATIVE_SERVER_EVENTS);
+                serverHook.setEvents(new ArrayList<>(newEvents));
+                updated = true;
+            }
+
+            return updated;
         }
-        
-        return !hookCommittersToIgnore.trim().equals(thisCommittersToIgnore.trim());
+
+        return false;
     }
 
-    public BitbucketWebHook mergeConfiguration(BitbucketWebHook hook) {
-        if(hook instanceof BitbucketRepositoryHook) {
-            Set<String> events = new TreeSet<>(hook.getEvents());
-            events.addAll(CLOUD_EVENTS);
-            BitbucketRepositoryHook repoHook = (BitbucketRepositoryHook) hook;
-            repoHook.setEvents(new ArrayList<String>(events));
-        } else if(hook instanceof BitbucketServerWebhook) {
-            BitbucketServerWebhook serverHook = (BitbucketServerWebhook) hook;
-            serverHook.setCommittersToIgnore(committersToIgnore);
-        }
-        return hook;
-    }
-    
     public BitbucketWebHook getHook(BitbucketSCMSource owner) {
-        if (BitbucketCloudEndpoint.SERVER_URL.equals(owner.getServerUrl())) {
+        final String serverUrl = owner.getServerUrl();
+        final String rootUrl = owner.getEndpointJenkinsRootUrl();
+        if (BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)) {
             BitbucketRepositoryHook hook = new BitbucketRepositoryHook();
             hook.setEvents(CLOUD_EVENTS);
             hook.setActive(true);
             hook.setDescription(description);
-            hook.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
-            return hook;
-        } else {
-            BitbucketServerWebhook hook = new BitbucketServerWebhook();
-            hook.setActive(true);
-            hook.setDescription(description);
-            hook.setUrl(Jenkins.getActiveInstance().getRootUrl() + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
-            hook.setCommittersToIgnore(committersToIgnore);
+            hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
             return hook;
         }
+
+        switch (BitbucketServerEndpoint.findWebhookImplementation(serverUrl)) {
+            case NATIVE: {
+                NativeBitbucketServerWebhook hook = new NativeBitbucketServerWebhook();
+                hook.setActive(true);
+                hook.setEvents(NATIVE_SERVER_EVENTS);
+                hook.setDescription(description);
+                hook.setUrl(getNativeServerWebhookUrl(serverUrl, rootUrl));
+                return hook;
+            }
+
+            case PLUGIN:
+            default: {
+                BitbucketServerWebhook hook = new BitbucketServerWebhook();
+                hook.setActive(true);
+                hook.setDescription(description);
+                hook.setUrl(rootUrl + BitbucketSCMSourcePushHookReceiver.FULL_PATH);
+                hook.setCommittersToIgnore(committersToIgnore);
+                return hook;
+            }
+        }
+    }
+
+    private static String getNativeServerWebhookUrl(String serverUrl, String rootUrl) {
+        return UriTemplate.buildFromTemplate(rootUrl)
+            .template(BitbucketSCMSourcePushHookReceiver.FULL_PATH)
+            .query("server_url")
+            .build()
+            .set("server_url", serverUrl)
+            .expand();
     }
 }

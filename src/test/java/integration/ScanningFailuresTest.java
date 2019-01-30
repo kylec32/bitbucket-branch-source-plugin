@@ -46,6 +46,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -72,42 +73,22 @@ public class ScanningFailuresTest {
 
     @Test
     public void getBranchesFailsWithIOException() throws Exception {
-        getBranchesFails(new Callable<Throwable>() {
-            @Override
-            public Throwable call() throws Exception {
-                return new IOException(message);
-            }
-        }, Result.FAILURE);
+        getBranchesFails(() -> new IOException(message), Result.FAILURE);
     }
 
     @Test
     public void getBranchesFailsWithInterruptedException() throws Exception {
-        getBranchesFails(new Callable<Throwable>() {
-            @Override
-            public Throwable call() throws Exception {
-                return new InterruptedException(message);
-            }
-        }, Result.ABORTED);
+        getBranchesFails(() -> new InterruptedException(message), Result.ABORTED);
     }
 
     @Test
     public void getBranchesFailsWithRuntimeException() throws Exception {
-        getBranchesFails(new Callable<Throwable>() {
-            @Override
-            public Throwable call() throws Exception {
-                return new RuntimeException(message);
-            }
-        }, Result.FAILURE);
+        getBranchesFails(() -> new RuntimeException(message), Result.FAILURE);
     }
 
     @Test
     public void getBranchesFailsWithError() throws Exception {
-        getBranchesFails(new Callable<Throwable>() {
-            @Override
-            public Throwable call() throws Exception {
-                return new Error(message);
-            }
-        }, Result.NOT_BUILT);
+        getBranchesFails(() -> new Error(message), Result.NOT_BUILT);
     }
 
     // We just need to verify the different types of exception being propagated for one source of exceptions
@@ -136,7 +117,7 @@ public class ScanningFailuresTest {
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
-                any(Integer.class),
+                anyString(),
                 eq("bob"),
                 eq("foo")))
                 .thenReturn(sampleRepo.fileUrl());
@@ -211,7 +192,7 @@ public class ScanningFailuresTest {
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
-                any(Integer.class),
+                anyString(),
                 eq("bob"),
                 eq("foo")))
                 .thenReturn(sampleRepo.fileUrl());
@@ -278,7 +259,7 @@ public class ScanningFailuresTest {
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
-                any(Integer.class),
+                anyString(),
                 eq("bob"),
                 eq("foo")))
                 .thenReturn(sampleRepo.fileUrl());
@@ -349,7 +330,7 @@ public class ScanningFailuresTest {
 
         when(api.getRepositoryUri(eq(BitbucketRepositoryType.GIT),
                 any(BitbucketRepositoryProtocol.class),
-                any(Integer.class),
+                anyString(),
                 eq("bob"),
                 eq("foo")))
                 .thenReturn(sampleRepo.fileUrl());

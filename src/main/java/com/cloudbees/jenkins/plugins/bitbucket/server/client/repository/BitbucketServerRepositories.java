@@ -23,50 +23,7 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.repository;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
+import com.cloudbees.jenkins.plugins.bitbucket.server.client.PagedApiResponse;
 
-public class BitbucketServerRepositories {
-    
-    private List<BitbucketServerRepository> values;
-
-    private Integer size;
-
-    @JsonProperty("isLastPage")
-    private Boolean lastPage;
-
-    private Integer nextPageStart;
-
-    public List<BitbucketServerRepository> getValues() {
-        return values;
-    }
-
-    public void setValues(List<BitbucketServerRepository> values) {
-        this.values = values;
-    }
-
-    public Integer getSize() {
-        return size;
-    }
-
-    public void setSize(Integer size) {
-        this.size = size;
-    }
-
-    public Boolean isLastPage() {
-        return lastPage;
-    }
-
-    public void setLastPage(Boolean lastPage) {
-        this.lastPage = lastPage;
-    }
-
-    public Integer getNextPageStart() {
-        return nextPageStart;
-    }
-
-    public void setNextPageStart(Integer nextPageStart) {
-        this.nextPageStart = nextPageStart;
-    }
-
+public class BitbucketServerRepositories extends PagedApiResponse<BitbucketServerRepository> {
 }

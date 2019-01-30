@@ -24,31 +24,67 @@
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
 import com.damnhandy.uri.template.UriTemplate;
+import jenkins.model.Jenkins;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 public class BitbucketCloudEndpointTest {
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
     private static final String V2_API_BASE_URL = "https://api.bitbucket.org/2.0/repositories";
     private static final String V2_TEAMS_API_BASE_URL = "https://api.bitbucket.org/2.0/teams/";
 
     @Test
     public void smokes() {
-        assertThat(new BitbucketCloudEndpoint(false, null).getDisplayName(), notNullValue());
-        assertThat(new BitbucketCloudEndpoint(false, null).getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
+        BitbucketCloudEndpoint endpoint1 = new BitbucketCloudEndpoint(false, null);
+
+        assertThat(endpoint1.getDisplayName(), notNullValue());
+        assertThat(endpoint1.getServerUrl(), is(BitbucketCloudEndpoint.SERVER_URL));
+
+        /* The endpoints should set (literally, not normalized) and return
+         * the bitbucketJenkinsRootUrl if the management of hooks is enabled */
+        assertThat(new BitbucketCloudEndpoint(false, null).getBitbucketJenkinsRootUrl(), nullValue());
+        assertThat(new BitbucketCloudEndpoint(false, null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), nullValue());
+        // No credentials - webhook still not managed, even with a checkbox
+        assertThat(new BitbucketCloudEndpoint(true,  null, "http://jenkins:8080").getBitbucketJenkinsRootUrl(), nullValue());
+
+        // With flag and with credentials, the hook is managed.
+        // getBitbucketJenkinsRootUrl() is verbatim what we set
+        // getEndpointJenkinsRootUrl() is normalized and ends with a slash
+        BitbucketCloudEndpoint endpoint2 = new BitbucketCloudEndpoint(true,  "{credid}", "http://jenkins:8080");
+        assertThat(endpoint2.getBitbucketJenkinsRootUrl(), is("http://jenkins:8080/"));
+        assertThat(endpoint2.getEndpointJenkinsRootUrl(), is("http://jenkins:8080/"));
+
+        // Make sure several invokations with same arguments do not conflict:
+        assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "https://jenkins:443/").getBitbucketJenkinsRootUrl(), is("https://jenkins/"));
+        assertThat(new BitbucketCloudEndpoint(true,  "{credid}", "https://jenkins:443/").getEndpointJenkinsRootUrl(), is("https://jenkins/"));
+    }
+
+    @Test
+    public void getUnmanagedDefaultRootUrl() {
+        assertThat(new BitbucketCloudEndpoint(true,  null).getEndpointJenkinsRootUrl(),
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getInstance().getRootUrl())));
+        assertThat(new BitbucketCloudEndpoint(false, "{cred}").getEndpointJenkinsRootUrl(),
+                is(AbstractBitbucketEndpoint.normalizeJenkinsRootUrl(Jenkins.getInstance().getRootUrl())));
     }
 
     @Test
     public void getRepositoryUrl() {
-        assertThat(new BitbucketCloudEndpoint(false, null).getRepositoryUrl("tester", "test-repo"),
-                is("https://bitbucket.org/tester/test-repo"));
+        BitbucketCloudEndpoint endpoint = new BitbucketCloudEndpoint(false, null);
+
+        assertThat(endpoint.getRepositoryUrl("tester", "test-repo"), is("https://bitbucket.org/tester/test-repo"));
     }
 
     @Test
-    public void testRepositoryTemplate() {
+    public void repositoryTemplate() {
         String owner = "bob";
         String repositoryName = "yetAnotherRepo";
         UriTemplate template = UriTemplate
@@ -69,5 +105,4 @@ public class BitbucketCloudEndpointTest {
                 .expand();
         assertThat(url, is(betterUrl));
     }
-
 }

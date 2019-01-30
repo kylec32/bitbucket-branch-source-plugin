@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016 CloudBees, Inc.
+ * Copyright (c) 2016 CloudBees, Inc., Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,6 @@ package com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestDestination;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketRepository;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.branch.BitbucketServerCommit;
 import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.BitbucketServerRepository;
@@ -38,46 +37,35 @@ public class BitbucketServerPullRequestDestination implements BitbucketPullReque
 
     @JsonProperty("displayId")
     private String branchName;
+    @JsonProperty
+    private String latestCommit;
 
     private BitbucketServerRepository repository;
-
+    private BitbucketServerBranch branch;
     @JsonProperty
     private BitbucketServerCommit commit;
 
     @Override
-    public BitbucketRepository getRepository() {
+    public BitbucketServerRepository getRepository() {
         return repository;
     }
 
     @Override
-    @JsonProperty
     public BitbucketBranch getBranch() {
-        return new BitbucketServerBranch(branchName, getLatestCommit());
+        if (branch == null) {
+            branch = new BitbucketServerBranch(branchName, latestCommit);
+        }
+        return branch;
     }
 
     @Override
     public BitbucketCommit getCommit() {
+        if (branch != null && commit == null) {
+            commit = new BitbucketServerCommit(branch.getMessage(), latestCommit, branch.getDateMillis(), branch.getAuthor());
+        }
         return commit;
     }
 
-    @JsonProperty
-    public void setBranch(BitbucketServerBranch branch) {
-        branchName = branch == null ? null : branch.getName();
-    }
-
-    public String getLatestCommit() {
-        return commit == null ? null : commit.getHash();
-    }
-
-    @JsonProperty
-    public void setLatestCommit(String latestCommit) {
-        this.commit = new BitbucketServerCommit(latestCommit);
-    }
-
-    public void setBranchName(String branchName) {
-        this.branchName = branchName;
-    }
-    
     public void setRepository(BitbucketServerRepository repository) {
         this.repository = repository;
     }

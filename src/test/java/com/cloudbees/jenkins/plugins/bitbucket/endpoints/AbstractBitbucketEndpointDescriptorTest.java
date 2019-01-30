@@ -32,7 +32,6 @@ import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Util;
 import hudson.util.ListBoxModel;
 import java.util.Collections;
 import java.util.List;
@@ -97,6 +96,11 @@ public class AbstractBitbucketEndpointDescriptorTest {
             return "http://dummy.example.com";
         }
 
+        @NonNull
+        @Override
+        public String getBitbucketJenkinsRootUrl() {
+            return "http://master.example.com";
+        }
 
         @NonNull
         @Override
@@ -113,6 +117,4 @@ public class AbstractBitbucketEndpointDescriptorTest {
 
         }
     }
-
-
 }

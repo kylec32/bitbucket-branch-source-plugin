@@ -23,20 +23,27 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.endpoints;
 
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.jenkins.plugins.bitbucket.server.BitbucketServerWebhookImplementation;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.annotation.Nonnull;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Represents a Bitbucket Server instance.
@@ -70,6 +77,9 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
     @NonNull
     private final String serverUrl;
 
+    @NonNull
+    private BitbucketServerWebhookImplementation webhookImplementation = BitbucketServerWebhookImplementation.PLUGIN;
+
     /**
      * Whether to always call the can merge api when retrieving pull requests.
      */
@@ -79,17 +89,34 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
      * @param displayName   Optional name to use to describe the end-point.
      * @param serverUrl     The URL of this Bitbucket Server
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
-     * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
+     * @param credentialsId The {@link StandardCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
      */
     @DataBoundConstructor
-    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl, boolean manageHooks,
-                                   @CheckForNull String credentialsId) {
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
+        boolean manageHooks, @CheckForNull String credentialsId) {
         super(manageHooks, credentialsId);
         this.serverUrl = BitbucketEndpointConfiguration.normalizeServerUrl(serverUrl);
         this.displayName = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName.trim();
+    }
+
+    @Restricted(NoExternalUse.class) // Used for testing
+    public BitbucketServerEndpoint(@CheckForNull String displayName, @NonNull String serverUrl,
+        boolean manageHooks, @CheckForNull String credentialsId, String endpointUrl) {
+        this(displayName, serverUrl, manageHooks, credentialsId);
+        setBitbucketJenkinsRootUrl(endpointUrl);
+    }
+
+    @NonNull
+    public static BitbucketServerWebhookImplementation findWebhookImplementation(String serverUrl) {
+        final AbstractBitbucketEndpoint endpoint = BitbucketEndpointConfiguration.get().findEndpoint(serverUrl);
+        if (endpoint instanceof BitbucketServerEndpoint) {
+            return ((BitbucketServerEndpoint) endpoint).getWebhookImplementation();
+        }
+
+        return BitbucketServerWebhookImplementation.PLUGIN;
     }
 
     public boolean isCallCanMerge() {
@@ -132,6 +159,27 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
                 : template.set("userOrProject", "projects").set("owner", repoOwner).expand();
     }
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Only non-null after we set them here!")
+    private Object readResolve() {
+        if (webhookImplementation == null) {
+            webhookImplementation = BitbucketServerWebhookImplementation.PLUGIN;
+        }
+        if (getBitbucketJenkinsRootUrl() != null) {
+            setBitbucketJenkinsRootUrl(getBitbucketJenkinsRootUrl());
+        }
+        return this;
+    }
+
+    @NonNull
+    public BitbucketServerWebhookImplementation getWebhookImplementation() {
+        return webhookImplementation;
+    }
+
+    @DataBoundSetter
+    public void setWebhookImplementation(@NonNull BitbucketServerWebhookImplementation webhookImplementation) {
+        this.webhookImplementation = requireNonNull(webhookImplementation);
+    }
+
     /**
      * Our descriptor.
      */
@@ -144,6 +192,16 @@ public class BitbucketServerEndpoint extends AbstractBitbucketEndpoint {
         @Override
         public String getDisplayName() {
             return Messages.BitbucketServerEndpoint_displayName();
+        }
+
+        @Restricted(NoExternalUse.class)
+        public ListBoxModel doFillWebhookImplementationItems() {
+            ListBoxModel items = new ListBoxModel();
+            for (BitbucketServerWebhookImplementation webhookImplementation : BitbucketServerWebhookImplementation.values()) {
+                items.add(webhookImplementation, webhookImplementation.name());
+            }
+
+            return items;
         }
 
         /**

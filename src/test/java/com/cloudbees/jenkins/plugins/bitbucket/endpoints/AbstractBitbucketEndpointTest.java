@@ -30,7 +30,6 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Util;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
@@ -119,6 +118,12 @@ public class AbstractBitbucketEndpointTest {
 
         @NonNull
         @Override
+        public String getBitbucketJenkinsRootUrl() {
+            return "http://master.example.com";
+        }
+
+        @NonNull
+        @Override
         public String getRepositoryUrl(@NonNull String repoOwner, @NonNull String repository) {
             return UriTemplate
                     .fromTemplate("http://dummy.example.com{/owner,repo}")
@@ -127,5 +132,4 @@ public class AbstractBitbucketEndpointTest {
                     .expand();
         }
     }
-
 }

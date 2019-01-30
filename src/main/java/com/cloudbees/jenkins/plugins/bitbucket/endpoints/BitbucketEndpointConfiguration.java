@@ -157,7 +157,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
         Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
         List<AbstractBitbucketEndpoint> eps = new ArrayList<>(Util.fixNull(endpoints));
         // remove duplicates and empty urls
-        Set<String> serverUrls = new HashSet<String>();
+        Set<String> serverUrls = new HashSet<>();
         for (ListIterator<AbstractBitbucketEndpoint> iterator = eps.listIterator(); iterator.hasNext(); ) {
             AbstractBitbucketEndpoint endpoint = iterator.next();
             String serverUrl = endpoint.getServerUrl();
@@ -167,7 +167,7 @@ public class BitbucketEndpointConfiguration extends GlobalConfiguration {
             } else if (!(endpoint instanceof BitbucketCloudEndpoint)
                     && BitbucketCloudEndpoint.SERVER_URL.equals(serverUrl)) {
                 // fix type for the special case
-                iterator.set(new BitbucketCloudEndpoint(endpoint.isManageHooks(), endpoint.getCredentialsId()));
+                iterator.set(new BitbucketCloudEndpoint(endpoint.isManageHooks(), endpoint.getCredentialsId(), endpoint.getBitbucketJenkinsRootUrl()));
             }
             serverUrls.add(serverUrl);
         }

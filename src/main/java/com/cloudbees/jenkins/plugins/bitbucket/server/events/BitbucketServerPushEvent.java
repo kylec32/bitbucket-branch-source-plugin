@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.plugins.bitbucket.server.client.repository.Bitbucke
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 public class BitbucketServerPushEvent implements BitbucketPushEvent{
@@ -38,6 +39,7 @@ public class BitbucketServerPushEvent implements BitbucketPushEvent{
     @JsonProperty
     private Push push;
 
+    @Override
     public BitbucketRepository getRepository() {
         return repository;
     }
@@ -55,7 +57,7 @@ public class BitbucketServerPushEvent implements BitbucketPushEvent{
 
     public void setChanges(List<ChangeImpl> changes) {
         this.push = new Push();
-        this.push.changes = changes != null ? new ArrayList<>(changes) : new ArrayList<ChangeImpl>();
+        this.push.changes = changes != null ? new ArrayList<>(changes) : new ArrayList<>();
     }
 
     public static class Push {
@@ -109,6 +111,7 @@ public class BitbucketServerPushEvent implements BitbucketPushEvent{
     }
 
     public static class ReferenceImpl implements Reference {
+        private Date date;
         private String type;
         private String name;
         private TargetImpl target;
@@ -139,11 +142,20 @@ public class BitbucketServerPushEvent implements BitbucketPushEvent{
         public void setTarget(TargetImpl target) {
             this.target = target;
         }
+
+        @Override
+        public Date getDate() {
+            return date != null ? (Date) date.clone() : null;
+        }
+
+        public void setDate(Date date) {
+            this.date = (date != null) ? (Date) date.clone() : null;
+        }
     }
 
     public static class TargetImpl implements Target {
-
         private String hash;
+        private Date date;
 
         @Override
         public String getHash() {
@@ -152,6 +164,15 @@ public class BitbucketServerPushEvent implements BitbucketPushEvent{
 
         public void setHash(String hash) {
             this.hash = hash;
+        }
+
+        @Override
+        public Date getDate() {
+            return date != null ? (Date) date.clone() : null;
+        }
+
+        public void setDate(Date date) {
+            this.date = (date != null) ? (Date) date.clone() : null;
         }
     }
 

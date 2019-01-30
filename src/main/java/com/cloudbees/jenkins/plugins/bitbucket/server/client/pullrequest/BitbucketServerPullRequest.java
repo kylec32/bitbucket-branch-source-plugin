@@ -23,10 +23,8 @@
  */
 package com.cloudbees.jenkins.plugins.bitbucket.server.client.pullrequest;
 
-
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketHref;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequestSource;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketReviewer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -65,7 +63,7 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
     private Map<String, List<BitbucketHref>> links;
 
     @Override
-    public BitbucketPullRequestSource getSource() {
+    public BitbucketServerPullRequestSource getSource() {
         return source;
     }
 
@@ -216,6 +214,4 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
             this.emailAddress = emailAddress;
         }
     }
-
-
 }
