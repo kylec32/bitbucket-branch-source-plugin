@@ -52,9 +52,11 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
 
     private String authorLogin;
 
-    private List<BitbucketReviewer> reviewers;
-
     private String authorEmail;
+
+    private String authorIdentifier;
+
+    private List<BitbucketReviewer> reviewers;
 
     private Boolean canMerge;
 
@@ -127,14 +129,21 @@ public class BitbucketServerPullRequest implements BitbucketPullRequest {
         return authorEmail;
     }
 
+    @Override
+    public String getAuthorIdentifier() {
+        return authorIdentifier;
+    }
+
     @JsonProperty
     public void setAuthor(Author author) {
         if (author != null && author.getUser() != null) {
             authorLogin = author.getUser().getDisplayName();
             authorEmail = author.getUser().getEmailAddress();
+            authorIdentifier = author.getUser().getName();
         } else {
             authorLogin = null;
             authorEmail = null;
+            authorIdentifier = null;
         }
     }
 

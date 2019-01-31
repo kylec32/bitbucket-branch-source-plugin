@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.plugins.bitbucket.api;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BitbucketReviewer {
     private User user;
@@ -46,15 +47,16 @@ public class BitbucketReviewer {
     }
 
     public static class User {
-        private String username;
+        @JsonProperty("account_id")
+        private String identifier;
 
         @JsonAlias("name")
-        public void setUsername(String username) {
-            this.username = username;
+        public void setIdentifier(String identifier) {
+            this.identifier = identifier;
         }
 
-        public String getUsername() {
-            return username;
+        public String getIdentifier() {
+            return identifier;
         }
     }
 }

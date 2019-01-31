@@ -90,6 +90,11 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
         return null;
     }
 
+    @Override
+    public String getAuthorIdentifier() {
+        return author.identifier;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }
@@ -148,6 +153,8 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
     }
 
     public static class Author {
+        @JsonProperty("account_id")
+        private String identifier;
         private String username;
         @JsonProperty("display_name")
         private String displayName;
@@ -162,6 +169,14 @@ public class BitbucketPullRequestValue implements BitbucketPullRequest {
 
         public void setUsername(String username) {
             this.username = username;
+        }
+
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        public void setIndentifier(String identifier) {
+            this.identifier = identifier;
         }
 
         @JsonIgnore
